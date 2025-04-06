@@ -94,14 +94,34 @@ resource "aws_instance" "server" {
   }
 
   provisioner "remote-exec" {
-    inline = [ 
+  inline = [
+    # System updates and Python environment setup
     "sudo apt update -y",
-    "sudo apt-get install -y python3-pip python3-venv",
+    "sudo apt-get install -y python3-pip python3-venv python3-full",
+    
+    # Clean previous attempts
     "cd /home/ubuntu",
     "rm -rf venv",
+    "rm -f flask.log",
+    
+    # Create and activate virtual environment
     "python3 -m venv venv",
-    "venv/bin/pip3 install flask",
-    "nohup venv/bin/python3 /home/ubuntu/app.py > flask.log 2>&1 &"
-    ]
-  }
+    
+    # Install Flask in virtual environment
+    "venv/bin/pip install flask",
+    
+    # Verify installation
+    "venv/bin/pip list | grep Flask",
+    
+    # Run Flask app with proper logging
+    "nohup venv/bin/python3 app.py > flask.log 2>&1 &",
+    
+    # Verify process is running
+    "sleep 5",
+    "ps aux | grep app.py",
+    
+    # Check logs
+    "tail -n 20 flask.log"
+  ]
+}
 }
